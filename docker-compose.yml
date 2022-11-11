@@ -1,0 +1,64 @@
+version: "3.8"
+
+services:
+  mariadb:
+    image: mariadb
+    restart: always
+    environment:
+      MARIADB_DATABASE: ${MARIADB_DATABASE}
+      MYSQL_USER: ${MARIADB_USER}
+      MYSQL_PASSWORD: ${MARIADB_PASS}
+      MYSQL_ROOT_PASSWORD: ${MARIADB_PASS}
+    ports:
+      - "${MARIADB_PORT}:3306"
+    volumes:
+      - "${VOLUMES}/mysql:/var/lib/mysql"
+  chrome:
+    build:
+      context: .
+      dockerfile: Dockerfile.chrome
+    restart: always
+    environment:
+      FUNCTION_EXTERNALS: '["aws-sdk"]'
+      CONNECTION_TIMEOUT: -1
+    ports:
+      - "${CHROME_PORT}:3000"
+  redis:
+    image: "redis:alpine"
+    restart: always
+    command: "redis-server --requirepass ${REDIS_PASS}"
+    environment:
+      TZ: "America/Sao_Paulo"
+    ports:
+      - "${REDIS_PORT}:6379"
+    volumes:
+      - "${VOLUMES}/redis-data:/sacmais/public"
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    restart: always
+    environment:
+      NODE_ENV: production
+    volumes:
+      - "${VOLUMES}/public:/sacmais/public"
+    ports:
+      - "${BACKEND_PORT}:${BACKEND_PORT}"
+    links:
+      - mariadb
+      - chrome
+    depends_on:
+      - mariadb
+      - chrome
+      - redis
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: always
+    environment:
+      NODE_ENV: production
+    ports:
+      - "${FRONTEND_PORT}:3333"
+    volumes:
+      - "${VOLUMES}/public:/sacmais/public"

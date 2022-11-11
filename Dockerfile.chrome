@@ -1,0 +1,12 @@
+FROM browserless/chrome:latest
+
+# Install the AWS SDK
+RUN npm install aws-sdk
+
+ENV TZ America/Sao_Paulo
+ENV PREBOOT_CHROME=true
+ENV KEEP_ALIVE=true
+ENV CHROME_REFRESH_TIME=3600000
+ENV MAX_QUEUE_LENGTH=20
+
+EXPOSE 3000
